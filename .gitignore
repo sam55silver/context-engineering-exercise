@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 backend/watchlist.db
 .DS_Store
+BUGS.md
