@@ -1,7 +1,9 @@
 from datetime import datetime
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+import math
+
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -43,7 +45,10 @@ def get_catalog():
 
 
 @app.get("/api/watchlist")
-def get_watchlist(page: int = 1, size: int = 5):
+def get_watchlist(
+    page: int = Query(default=1, ge=1),
+    size: int = Query(default=5, ge=1, le=100),
+):
     conn = get_conn()
     offset = (page - 1) * size
     rows = conn.execute(
@@ -64,6 +69,7 @@ def get_watchlist(page: int = 1, size: int = 5):
         "page": page,
         "size": size,
         "total": total,
+        "total_pages": max(1, math.ceil(total / size)),
     }
 
 

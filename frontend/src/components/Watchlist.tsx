@@ -5,14 +5,14 @@ import { TitleCard } from "./TitleCard";
 export function Watchlist() {
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<WatchlistItem[]>([]);
-  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [filter, setFilter] = useState<"all" | "unwatched" | "watched">("all");
   const size = 5;
 
   async function load() {
     const data = await fetchWatchlist(page, size);
     setItems(data.items);
-    setTotal(data.total);
+    setTotalPages(data.total_pages);
   }
 
   useEffect(() => {
@@ -33,8 +33,6 @@ export function Watchlist() {
     if (filter === "unwatched") return i.is_watched === false;
     return true;
   });
-
-  const totalPages = Math.max(1, Math.ceil(total / size));
 
   return (
     <>
