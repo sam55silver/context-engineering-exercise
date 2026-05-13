@@ -11,7 +11,7 @@ export function TitleCard({ item, action, watched }: Props) {
     <div className={`card ${watched ? "watched" : ""}`}>
       <h3>{item.title}</h3>
       <div className="meta">
-        <span className="kind">{item.kind}</span> · {item.releaseYear} · {item.genre}
+        <span className="kind">{item.kind}</span> · {item.release_year} · {item.genre}
       </div>
       {action}
     </div>
