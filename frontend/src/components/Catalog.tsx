@@ -12,8 +12,13 @@ export function Catalog() {
 
   async function handleAdd(id: number) {
     setAdding(id);
-    await addToWatchlist(id);
-    setAdding(null);
+    try {
+      await addToWatchlist(id);
+    } catch (err) {
+      console.error("Failed to add to watchlist:", err);
+    } finally {
+      setAdding(null);
+    }
   }
 
   return (
