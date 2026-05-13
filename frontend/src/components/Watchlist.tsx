@@ -19,6 +19,10 @@ export function Watchlist() {
     load();
   }, [page]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [filter]);
+
   async function toggle(item: WatchlistItem) {
     await markWatched(item.watchlist_id, !item.is_watched);
     load();
