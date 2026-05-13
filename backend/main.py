@@ -78,19 +78,6 @@ def add_to_watchlist(body: AddToWatchlist):
     return {"ok": True}
 
 
-@app.patch("/api/watchlist/{watchlist_id}")
-def mark_watched(watchlist_id: int, body: WatchUpdate):
-    conn = get_conn()
-    watched_at = datetime.utcnow().isoformat() if body.is_watched else None
-    conn.execute(
-        "UPDATE watchlist SET is_watched = ?, watched_at = ? WHERE id = ?",
-        (1 if body.is_watched else 0, watched_at, watchlist_id),
-    )
-    conn.commit()
-    conn.close()
-    return {"ok": True}
-
-
 @app.get("/api/watchlist/recent")
 def get_recent():
     """Items watched today."""
@@ -109,3 +96,16 @@ def get_recent():
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+@app.patch("/api/watchlist/{watchlist_id}")
+def mark_watched(watchlist_id: int, body: WatchUpdate):
+    conn = get_conn()
+    watched_at = datetime.utcnow().isoformat() if body.is_watched else None
+    conn.execute(
+        "UPDATE watchlist SET is_watched = ?, watched_at = ? WHERE id = ?",
+        (1 if body.is_watched else 0, watched_at, watchlist_id),
+    )
+    conn.commit()
+    conn.close()
+    return {"ok": True}
