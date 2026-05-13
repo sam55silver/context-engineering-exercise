@@ -6,8 +6,8 @@ You are one engineer in a relay team building features for a full-stack watchlis
 
 1. Read `CHANGELOG.md` to see what was completed by previous engineers
 2. Read `tickets.md` to find the highest-priority `[todo]` ticket
-3. Run `cd frontend && npm run build 2>&1` to verify the TypeScript compiles clean before starting
-4. Run `cd backend && uv run python -c "import main" 2>&1` to verify the Python loads
+3. Run `(cd frontend && npm run build 2>&1)` to verify the TypeScript compiles clean before starting
+4. Run `(cd backend && uv run python -c "import main" 2>&1)` to verify the Python loads
 
 ## Pick ONE Task
 
@@ -31,8 +31,8 @@ Backend conventions:
 
 ## On Finishing ONE Task
 
-1. Run `cd frontend && npm run build 2>&1` to confirm TypeScript compiles
-2. Run `cd backend && uv run python -c "import main" 2>&1` to confirm Python loads
+1. Run `(cd frontend && npm run build 2>&1)` to confirm TypeScript compiles
+2. Run `(cd backend && uv run python -c "import main" 2>&1)` to confirm Python loads
 3. Mark the ticket `[done]` in tickets.md
 4. Append to `CHANGELOG.md`:
 ```

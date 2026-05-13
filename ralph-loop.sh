@@ -14,6 +14,9 @@ while [ "$iteration" -lt "$MAX_ITERATIONS" ]; do
   iteration=$((iteration + 1))
   echo "--- Iteration $iteration / $MAX_ITERATIONS ---"
 
+  # Always reset to repo root to avoid cwd drift from agent cd commands
+  cd "$(dirname "$0")"
+
   # Check for dirty state (interrupted previous iteration)
   if git diff --quiet && git diff --cached --quiet; then
     # Clean tree — pull latest changes
@@ -34,7 +37,7 @@ while [ "$iteration" -lt "$MAX_ITERATIONS" ]; do
   echo "Remaining: $TODO_COUNT todo, $IN_PROGRESS_COUNT in progress"
 
   # Run the agent
-  opencode run --agent build --dangerously-skip-permissions "@RALPH.md"
+  opencode run --agent build "@RALPH.md"
 
   # Check for RALPH_DONE signal (agent outputs this when finished)
   # If agent crashed, dirty tree check on next iteration handles resume
