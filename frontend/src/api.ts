@@ -23,6 +23,7 @@ export type WatchlistPage = {
   page: number;
   size: number;
   total: number;
+  total_pages: number;
 };
 
 export async function fetchCatalog(): Promise<Title[]> {
