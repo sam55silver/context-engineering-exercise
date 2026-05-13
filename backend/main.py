@@ -43,7 +43,7 @@ def get_catalog():
 @app.get("/api/watchlist")
 def get_watchlist(page: int = 1, size: int = 5):
     conn = get_conn()
-    offset = page * size
+    offset = (page - 1) * size
     rows = conn.execute(
         """
         SELECT w.id as watchlist_id, w.is_watched, w.added_at, w.watched_at,
