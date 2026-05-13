@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
-import { fetchRecent, type WatchlistItem } from "../api";
+import { useRecentlyWatched } from "../hooks/useRecentlyWatched";
 import { TitleCard } from "./TitleCard";
 
 export function RecentlyWatched() {
-  const [items, setItems] = useState<WatchlistItem[]>([]);
+  const { items, loading, error } = useRecentlyWatched();
 
-  useEffect(() => {
-    fetchRecent().then(setItems);
-  }, []);
+  if (error) {
+    return <div className="empty">Error loading recently watched: {error.message}</div>;
+  }
+
+  if (loading) {
+    return <div className="empty">Loading recently watched…</div>;
+  }
 
   if (items.length === 0) {
     return <div className="empty">Nothing watched today yet.</div>;

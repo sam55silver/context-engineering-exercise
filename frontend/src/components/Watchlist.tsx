@@ -1,36 +1,22 @@
-import { useEffect, useState } from "react";
-import { fetchWatchlist, markWatched, type WatchlistItem } from "../api";
+import { useWatchlist } from "../hooks/useWatchlist";
 import { TitleCard } from "./TitleCard";
 
 export function Watchlist() {
-  const [page, setPage] = useState(1);
-  const [items, setItems] = useState<WatchlistItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [filter, setFilter] = useState<"all" | "unwatched" | "watched">("all");
-  const size = 5;
+  const {
+    items,
+    page,
+    totalPages,
+    loading,
+    error,
+    filter,
+    setPage,
+    setFilter,
+    markWatched,
+  } = useWatchlist();
 
-  async function load() {
-    const data = await fetchWatchlist(page, size);
-    setItems(data.items);
-    setTotal(data.total);
+  if (error) {
+    return <div className="empty">Error loading watchlist: {error.message}</div>;
   }
-
-  useEffect(() => {
-    load();
-  }, [page]);
-
-  async function toggle(item: WatchlistItem) {
-    await markWatched(item.watchlist_id, !item.is_watched);
-    load();
-  }
-
-  const visible = items.filter((i) => {
-    if (filter === "watched") return i.is_watched === true;
-    if (filter === "unwatched") return i.is_watched === false;
-    return true;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(total / size));
 
   return (
     <>
@@ -46,17 +32,19 @@ export function Watchlist() {
         </button>
       </div>
 
-      {visible.length === 0 ? (
+      {loading ? (
+        <div className="empty">Loading watchlist…</div>
+      ) : items.length === 0 ? (
         <div className="empty">Nothing here.</div>
       ) : (
         <div className="grid">
-          {visible.map((item) => (
+          {items.map((item) => (
             <TitleCard
               key={item.watchlist_id}
               item={item}
               watched={!!item.is_watched}
               action={
-                <button className="secondary" onClick={() => toggle(item)}>
+                <button className="secondary" onClick={() => markWatched(item)}>
                   {item.is_watched ? "↺ Unwatch" : "✓ Mark watched"}
                 </button>
               }
@@ -69,7 +57,7 @@ export function Watchlist() {
         <button
           className="secondary"
           disabled={page <= 1}
-          onClick={() => setPage((p) => p - 1)}
+          onClick={() => setPage(page - 1)}
         >
           ← Prev
         </button>
@@ -79,7 +67,7 @@ export function Watchlist() {
         <button
           className="secondary"
           disabled={page >= totalPages}
-          onClick={() => setPage((p) => p + 1)}
+          onClick={() => setPage(page + 1)}
         >
           Next →
         </button>
