@@ -28,13 +28,16 @@ export function Watchlist() {
     load();
   }
 
-  const visible = items.filter((i) => {
-    if (filter === "watched") return i.is_watched === true;
-    if (filter === "unwatched") return i.is_watched === false;
+  const visible = (Array.isArray(items) ? items : []).filter((i) => {
+    const isWatched = Boolean(i.is_watched);
+    if (filter === "watched") return isWatched;
+    if (filter === "unwatched") return !isWatched;
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(total / size));
+  const totalPages = Math.max(1, Math.ceil((filter === "all" ? total : visible.length) / size));
+  const canGoPrev = page > 1;
+  const canGoNext = page < totalPages;
 
   return (
     <>
@@ -72,7 +75,7 @@ export function Watchlist() {
       <div className="pagination">
         <button
           className="secondary"
-          disabled={page <= 1}
+          disabled={!canGoPrev}
           onClick={() => setPage((p) => p - 1)}
         >
           ← Prev
@@ -82,7 +85,7 @@ export function Watchlist() {
         </span>
         <button
           className="secondary"
-          disabled={page >= totalPages}
+          disabled={!canGoNext}
           onClick={() => setPage((p) => p + 1)}
         >
           Next →
