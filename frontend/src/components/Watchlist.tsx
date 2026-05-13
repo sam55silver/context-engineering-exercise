@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fetchWatchlist, markWatched, type WatchlistItem } from "../api";
 import { TitleCard } from "./TitleCard";
 
@@ -8,25 +8,30 @@ export function Watchlist() {
   const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<"all" | "unwatched" | "watched">("all");
   const size = 5;
+  const latestLoadId = useRef(0);
 
-  async function load() {
-    const data = await fetchWatchlist(page, size);
+  async function load(nextPage: number) {
+    const loadId = ++latestLoadId.current;
+    const data = await fetchWatchlist(nextPage, size);
+    if (loadId !== latestLoadId.current) {
+      return;
+    }
     setItems(data.items);
     setTotal(data.total);
   }
 
   useEffect(() => {
-    load();
+    void load(page);
   }, [page]);
 
   async function toggle(item: WatchlistItem) {
-    await markWatched(item.watchlist_id, !item.is_watched);
-    load();
+    await markWatched(item.watchlist_id, !item.isWatched);
+    void load(page);
   }
 
   const visible = items.filter((i) => {
-    if (filter === "watched") return i.is_watched === true;
-    if (filter === "unwatched") return i.is_watched === false;
+    if (filter === "watched") return i.isWatched;
+    if (filter === "unwatched") return !i.isWatched;
     return true;
   });
 
@@ -54,10 +59,10 @@ export function Watchlist() {
             <TitleCard
               key={item.watchlist_id}
               item={item}
-              watched={!!item.is_watched}
+              watched={item.isWatched}
               action={
                 <button className="secondary" onClick={() => toggle(item)}>
-                  {item.is_watched ? "↺ Unwatch" : "✓ Mark watched"}
+                  {item.isWatched ? "↺ Unwatch" : "✓ Mark watched"}
                 </button>
               }
             />

@@ -32,18 +32,30 @@ class AddToWatchlist(BaseModel):
     title_id: int
 
 
+def _normalize_release_year(row: dict) -> dict:
+    release_year = row.pop("release_year", None)
+    if release_year is not None:
+        row["releaseYear"] = release_year
+    return row
+
+
 @app.get("/api/catalog")
 def get_catalog():
     conn = get_conn()
     rows = conn.execute("SELECT * FROM titles ORDER BY id").fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    return [_normalize_release_year(dict(r)) for r in rows]
 
 
 @app.get("/api/watchlist")
 def get_watchlist(page: int = 1, size: int = 5):
+    if page < 1:
+        raise HTTPException(status_code=422, detail="page must be >= 1")
+    if size < 1 or size > 100:
+        raise HTTPException(status_code=422, detail="size must be between 1 and 100")
+
     conn = get_conn()
-    offset = page * size
+    offset = (page - 1) * size
     rows = conn.execute(
         """
         SELECT w.id as watchlist_id, w.is_watched, w.added_at, w.watched_at,
@@ -58,7 +70,7 @@ def get_watchlist(page: int = 1, size: int = 5):
     total = conn.execute("SELECT COUNT(*) FROM watchlist").fetchone()[0]
     conn.close()
     return {
-        "items": [dict(r) for r in rows],
+        "items": [_normalize_release_year(dict(r)) for r in rows],
         "page": page,
         "size": size,
         "total": total,
@@ -82,10 +94,13 @@ def add_to_watchlist(body: AddToWatchlist):
 def mark_watched(watchlist_id: int, body: WatchUpdate):
     conn = get_conn()
     watched_at = datetime.utcnow().isoformat() if body.is_watched else None
-    conn.execute(
+    result = conn.execute(
         "UPDATE watchlist SET is_watched = ?, watched_at = ? WHERE id = ?",
         (1 if body.is_watched else 0, watched_at, watchlist_id),
     )
+    if result.rowcount == 0:
+        conn.close()
+        raise HTTPException(status_code=404, detail="watchlist item not found")
     conn.commit()
     conn.close()
     return {"ok": True}
@@ -108,4 +123,4 @@ def get_recent():
         (today,),
     ).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    return [_normalize_release_year(dict(r)) for r in rows]
