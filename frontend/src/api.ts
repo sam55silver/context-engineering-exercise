@@ -13,7 +13,7 @@ export type WatchlistItem = {
   kind: "show" | "movie";
   releaseYear: number;
   genre: string;
-  is_watched: boolean;
+  is_watched: 0 | 1;
   added_at: string;
   watched_at: string | null;
 };

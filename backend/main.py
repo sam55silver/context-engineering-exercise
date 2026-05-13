@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -83,7 +83,7 @@ def add_to_watchlist(body: AddToWatchlist):
 @app.get("/api/watchlist/recent")
 def get_recent():
     """Items watched today."""
-    today = datetime.utcnow().date().isoformat()
+    today = datetime.now(timezone.utc).date().isoformat()
     conn = get_conn()
     rows = conn.execute(
         """
@@ -103,7 +103,7 @@ def get_recent():
 @app.patch("/api/watchlist/{watchlist_id}")
 def mark_watched(watchlist_id: int, body: WatchUpdate):
     conn = get_conn()
-    watched_at = datetime.utcnow().isoformat() if body.is_watched else None
+    watched_at = datetime.now(timezone.utc).isoformat() if body.is_watched else None
     conn.execute(
         "UPDATE watchlist SET is_watched = ?, watched_at = ? WHERE id = ?",
         (1 if body.is_watched else 0, watched_at, watchlist_id),

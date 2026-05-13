@@ -29,8 +29,8 @@ export function Watchlist() {
   }
 
   const visible = items.filter((i) => {
-    if (filter === "watched") return i.is_watched === true;
-    if (filter === "unwatched") return i.is_watched === false;
+    if (filter === "watched") return i.is_watched === 1;
+    if (filter === "unwatched") return i.is_watched === 0;
     return true;
   });
 
