@@ -25,18 +25,26 @@ export type WatchlistPage = {
   total: number;
 };
 
+async function checkedFetch(input: RequestInfo, init?: RequestInit): Promise<Response> {
+  const res = await fetch(input, init);
+  if (!res.ok) {
+    throw new Error(`Request failed: ${res.status} ${res.statusText}`);
+  }
+  return res;
+}
+
 export async function fetchCatalog(): Promise<Title[]> {
-  const res = await fetch("/api/catalog");
+  const res = await checkedFetch("/api/catalog");
   return res.json();
 }
 
 export async function fetchWatchlist(page: number, size = 5): Promise<WatchlistPage> {
-  const res = await fetch(`/api/watchlist?page=${page}&size=${size}`);
+  const res = await checkedFetch(`/api/watchlist?page=${page}&size=${size}`);
   return res.json();
 }
 
 export async function addToWatchlist(titleId: number): Promise<void> {
-  await fetch("/api/watchlist", {
+  await checkedFetch("/api/watchlist", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ title_id: titleId }),
@@ -44,7 +52,7 @@ export async function addToWatchlist(titleId: number): Promise<void> {
 }
 
 export async function markWatched(watchlistId: number, isWatched: boolean): Promise<void> {
-  await fetch(`/api/watchlist/${watchlistId}`, {
+  await checkedFetch(`/api/watchlist/${watchlistId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ is_watched: isWatched }),
@@ -52,6 +60,6 @@ export async function markWatched(watchlistId: number, isWatched: boolean): Prom
 }
 
 export async function fetchRecent(): Promise<WatchlistItem[]> {
-  const res = await fetch("/api/watchlist/recent");
+  const res = await checkedFetch("/api/watchlist/recent");
   return res.json();
 }

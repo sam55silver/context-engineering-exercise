@@ -1,18 +1,30 @@
 import { useEffect, useState } from "react";
 import { fetchWatchlist, markWatched, type WatchlistItem } from "../api";
 import { TitleCard } from "./TitleCard";
+import { SkeletonGrid } from "./SkeletonGrid";
 
 export function Watchlist() {
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<WatchlistItem[]>([]);
   const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<"all" | "unwatched" | "watched">("all");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<number | null>(null);
   const size = 5;
 
   async function load() {
-    const data = await fetchWatchlist(page, size);
-    setItems(data.items);
-    setTotal(data.total);
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchWatchlist(page, size);
+      setItems(data.items);
+      setTotal(data.total);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load watchlist.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -20,8 +32,15 @@ export function Watchlist() {
   }, [page]);
 
   async function toggle(item: WatchlistItem) {
-    await markWatched(item.watchlist_id, !item.is_watched);
-    load();
+    setToggling(item.watchlist_id);
+    try {
+      await markWatched(item.watchlist_id, !item.is_watched);
+      await load();
+    } catch {
+      // re-enable on error
+    } finally {
+      setToggling(null);
+    }
   }
 
   const visible = items.filter((i) => {
@@ -46,7 +65,14 @@ export function Watchlist() {
         </button>
       </div>
 
-      {visible.length === 0 ? (
+      {loading ? (
+        <SkeletonGrid />
+      ) : error ? (
+        <div className="error-state">
+          <p className="error-message">⚠ {error}</p>
+          <button className="primary" onClick={load}>Retry</button>
+        </div>
+      ) : visible.length === 0 ? (
         <div className="empty">Nothing here.</div>
       ) : (
         <div className="grid">
@@ -56,8 +82,16 @@ export function Watchlist() {
               item={item}
               watched={!!item.is_watched}
               action={
-                <button className="secondary" onClick={() => toggle(item)}>
-                  {item.is_watched ? "↺ Unwatch" : "✓ Mark watched"}
+                <button
+                  className="secondary"
+                  disabled={toggling !== null}
+                  onClick={() => toggle(item)}
+                >
+                  {toggling === item.watchlist_id
+                    ? "Saving…"
+                    : item.is_watched
+                    ? "↺ Unwatch"
+                    : "✓ Mark watched"}
                 </button>
               }
             />
@@ -68,7 +102,7 @@ export function Watchlist() {
       <div className="pagination">
         <button
           className="secondary"
-          disabled={page <= 1}
+          disabled={page <= 1 || loading}
           onClick={() => setPage((p) => p - 1)}
         >
           ← Prev
@@ -78,7 +112,7 @@ export function Watchlist() {
         </span>
         <button
           className="secondary"
-          disabled={page >= totalPages}
+          disabled={page >= totalPages || loading}
           onClick={() => setPage((p) => p + 1)}
         >
           Next →
