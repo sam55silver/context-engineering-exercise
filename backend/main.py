@@ -35,7 +35,9 @@ class AddToWatchlist(BaseModel):
 @app.get("/api/catalog")
 def get_catalog():
     conn = get_conn()
-    rows = conn.execute("SELECT * FROM titles ORDER BY id").fetchall()
+    rows = conn.execute(
+        "SELECT id, title, kind, release_year AS releaseYear, genre FROM titles ORDER BY id"
+    ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -47,7 +49,7 @@ def get_watchlist(page: int = 1, size: int = 5):
     rows = conn.execute(
         """
         SELECT w.id as watchlist_id, w.is_watched, w.added_at, w.watched_at,
-               t.id as title_id, t.title, t.kind, t.release_year, t.genre
+               t.id as title_id, t.title, t.kind, t.release_year AS releaseYear, t.genre
         FROM watchlist w
         JOIN titles t ON t.id = w.title_id
         ORDER BY w.id
@@ -99,7 +101,7 @@ def get_recent():
     rows = conn.execute(
         """
         SELECT w.id as watchlist_id, w.is_watched, w.watched_at,
-               t.id as title_id, t.title, t.kind, t.release_year, t.genre
+               t.id as title_id, t.title, t.kind, t.release_year AS releaseYear, t.genre
         FROM watchlist w
         JOIN titles t ON t.id = w.title_id
         WHERE w.is_watched = 1 AND DATE(w.watched_at) = ?
