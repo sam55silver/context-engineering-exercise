@@ -12,8 +12,11 @@ export function Catalog() {
 
   async function handleAdd(id: number) {
     setAdding(id);
-    await addToWatchlist(id);
-    setAdding(null);
+    try {
+      await addToWatchlist(id);
+    } finally {
+      setAdding(null);  // fix: always re-enable button, even on error
+    }
   }
 
   return (
