@@ -34,7 +34,7 @@ while [ "$iteration" -lt "$MAX_ITERATIONS" ]; do
   echo "Remaining: $TODO_COUNT todo, $IN_PROGRESS_COUNT in progress"
 
   # Run the agent
-  opencode run --agent build "@RALPH.md"
+  opencode run --agent build --dangerously-skip-permissions "@RALPH.md"
 
   # Check for RALPH_DONE signal (agent outputs this when finished)
   # If agent crashed, dirty tree check on next iteration handles resume
