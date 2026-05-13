@@ -2,7 +2,7 @@ export type Title = {
   id: number;
   title: string;
   kind: "show" | "movie";
-  releaseYear: number;
+  release_year: number;
   genre: string;
 };
 
@@ -11,7 +11,7 @@ export type WatchlistItem = {
   title_id: number;
   title: string;
   kind: "show" | "movie";
-  releaseYear: number;
+  release_year: number;
   genre: string;
   is_watched: boolean;
   added_at: string;
