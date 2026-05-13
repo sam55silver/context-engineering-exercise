@@ -1,52 +1,48 @@
+"""Database connection management.
+
+Schema migrations and data seeding are now handled separately:
+- Schema changes: Use backend/migrate.py and backend/migrations/
+- Data seeding: Use backend/seed.py and backend/seeds/
+- Database setup: Call migrate() and seed() during app initialization
+"""
+
 import sqlite3
 from pathlib import Path
-from seed_data import SEED_TITLES
+
+from migrate import get_runner
+from seed import get_seeder
 
 DB_PATH = Path(__file__).parent / "watchlist.db"
 
 
 def get_conn() -> sqlite3.Connection:
+    """Get a database connection with Row factory enabled."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db() -> None:
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS titles (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            kind TEXT NOT NULL,
-            release_year INTEGER NOT NULL,
-            genre TEXT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS watchlist (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title_id INTEGER NOT NULL UNIQUE REFERENCES titles(id),
-            is_watched INTEGER NOT NULL DEFAULT 0,
-            added_at TEXT NOT NULL DEFAULT (datetime('now')),
-            watched_at TEXT
-        );
-        """
-    )
-
-    cur.execute("SELECT COUNT(*) FROM titles")
-    if cur.fetchone()[0] == 0:
-        cur.executemany(
-            "INSERT INTO titles (title, kind, release_year, genre) VALUES (:title, :kind, :release_year, :genre)",
-            SEED_TITLES,
-        )
-        # Pre-populate the watchlist with the first 8 titles so users see data immediately.
-        cur.execute("SELECT id FROM titles ORDER BY id LIMIT 8")
-        ids = [row["id"] for row in cur.fetchall()]
-        cur.executemany(
-            "INSERT INTO watchlist (title_id) VALUES (?)",
-            [(tid,) for tid in ids],
-        )
-
-    conn.commit()
-    conn.close()
+    """Initialize the database.
+    
+    This function:
+    1. Creates the database file if it doesn't exist
+    2. Applies all pending migrations
+    3. Seeds initial data if not already seeded
+    
+    Called automatically during app startup via lifespan.
+    """
+    # Ensure database file exists (create it if needed)
+    if not DB_PATH.exists():
+        sqlite3.connect(DB_PATH).close()
+    
+    # Apply migrations
+    runner = get_runner()
+    pending = runner.get_pending_migrations()
+    if pending:
+        print(f"Applying {len(pending)} pending migration(s)...")
+        runner.migrate()
+    
+    # Seed data
+    seeder = get_seeder()
+    seeder.seed()
