@@ -1,0 +1,61 @@
+"""Seed titles data into the database."""
+
+import sqlite3
+from seeds import Seeder
+
+
+SEED_TITLES = [
+    {"title": "The Expanse", "kind": "show", "release_year": 2015, "genre": "Sci-Fi"},
+    {"title": "Dune: Part Two", "kind": "movie", "release_year": 2024, "genre": "Sci-Fi"},
+    {"title": "Severance", "kind": "show", "release_year": 2022, "genre": "Thriller"},
+    {"title": "Everything Everywhere All at Once", "kind": "movie", "release_year": 2022, "genre": "Comedy"},
+    {"title": "Andor", "kind": "show", "release_year": 2022, "genre": "Sci-Fi"},
+    {"title": "Oppenheimer", "kind": "movie", "release_year": 2023, "genre": "Drama"},
+    {"title": "The Bear", "kind": "show", "release_year": 2022, "genre": "Drama"},
+    {"title": "Past Lives", "kind": "movie", "release_year": 2023, "genre": "Drama"},
+    {"title": "Shogun", "kind": "show", "release_year": 2024, "genre": "Drama"},
+    {"title": "Poor Things", "kind": "movie", "release_year": 2023, "genre": "Comedy"},
+    {"title": "Slow Horses", "kind": "show", "release_year": 2022, "genre": "Thriller"},
+    {"title": "Anatomy of a Fall", "kind": "movie", "release_year": 2023, "genre": "Drama"},
+    {"title": "Fargo", "kind": "show", "release_year": 2014, "genre": "Thriller"},
+    {"title": "The Holdovers", "kind": "movie", "release_year": 2023, "genre": "Drama"},
+    {"title": "Reservation Dogs", "kind": "show", "release_year": 2021, "genre": "Comedy"},
+    {"title": "Killers of the Flower Moon", "kind": "movie", "release_year": 2023, "genre": "Drama"},
+    {"title": "Pachinko", "kind": "show", "release_year": 2022, "genre": "Drama"},
+    {"title": "The Zone of Interest", "kind": "movie", "release_year": 2023, "genre": "Drama"},
+    {"title": "Beef", "kind": "show", "release_year": 2023, "genre": "Drama"},
+    {"title": "Aftersun", "kind": "movie", "release_year": 2022, "genre": "Drama"},
+]
+
+
+class SeedTitles(Seeder):
+    """Seed the titles table with sample titles."""
+    
+    name = "seed_titles"
+    
+    def seed(self, conn: sqlite3.Connection) -> None:
+        """Insert seed titles and pre-populate watchlist with first 8."""
+        cur = conn.cursor()
+        
+        # Check if titles already exist
+        cur.execute("SELECT COUNT(*) FROM titles")
+        if cur.fetchone()[0] > 0:
+            print("Titles already seeded, skipping")
+            return
+        
+        # Insert titles
+        cur.executemany(
+            "INSERT INTO titles (title, kind, release_year, genre) VALUES (:title, :kind, :release_year, :genre)",
+            SEED_TITLES,
+        )
+        
+        # Pre-populate watchlist with first 8 titles
+        cur.execute("SELECT id FROM titles ORDER BY id LIMIT 8")
+        ids = [row[0] for row in cur.fetchall()]
+        cur.executemany(
+            "INSERT INTO watchlist (title_id) VALUES (?)",
+            [(tid,) for tid in ids],
+        )
+        
+        conn.commit()
+        print(f"Seeded {len(SEED_TITLES)} titles and {len(ids)} to watchlist")
